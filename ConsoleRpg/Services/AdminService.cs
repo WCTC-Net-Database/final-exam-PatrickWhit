@@ -1,8 +1,10 @@
 using ConsoleRpgEntities.Data;
+using ConsoleRpgEntities.Models.Abilities.PlayerAbilities;
 using ConsoleRpgEntities.Models.Characters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
+using System.Numerics;
 
 namespace ConsoleRpg.Services;
 
@@ -217,31 +219,100 @@ public class AdminService
     /// <summary>
     /// TODO: Implement this method
     /// Requirements:
-    /// - Display a list of existing characters
-    /// - Prompt user to select a character (by ID)
-    /// - Display a list of available abilities from the database
-    /// - Prompt user to select an ability to add
-    /// - Associate the ability with the character using the many-to-many relationship
-    /// - Save changes to the database
-    /// - Display confirmation message with the character name and ability name
-    /// - Log the operation
+    /// - Display a list of existing characters **
+    /// - Prompt user to select a character (by ID) **
+    /// - Display a list of available abilities from the database **
+    /// - Prompt user to select an ability to add **
+    /// - Associate the ability with the character using the many-to-many relationship **
+    /// - Save changes to the database **
+    /// - Display confirmation message with the character name and ability name **
+    /// - Log the operation **
     /// </summary>
     public void AddAbilityToCharacter()
     {
-        _logger.LogInformation("User selected Add Ability to Character");
-        AnsiConsole.MarkupLine("[yellow]=== Add Ability to Character ===[/]");
+        try
+        {
+            _logger.LogInformation("User selected Add Ability to Character");
+            AnsiConsole.MarkupLine("[yellow]=== Add Ability to Character ===[/]");
+
+            // call DisplayAllCharacters() to get a character list
+            DisplayAllCharacters();
+
+            // user selects a character by their ID
+            var charId = AnsiConsole.Ask<int>("Enter [green]character Id[/]:");
+            // use character id to get the player character
+            var character = _context.Players.Find(charId);
+            if (character == null)
+            {
+                AnsiConsole.MarkupLine($"[red]Character with ID {charId} not found.[/]");
+                return;
+            }
+
+            // get a list of all the abilities
+            var abilities = _context.Abilities;
+            // check to see if there are any abilities
+            if(!abilities.Any())
+            {
+                AnsiConsole.MarkupLine("[red]No abilities found.[/]");
+            }
+            else
+            {
+                // list all the abilities for the user to see
+                var table = new Table();
+                table.AddColumn("ID");
+                table.AddColumn("Name");
+                table.AddColumn("Description");
+                table.AddColumn("AbilityType");
+
+                foreach (var a in abilities)
+                {
+                    table.AddRow(
+                        a.Id.ToString(),
+                        a.Name,
+                        a.Description.ToString(),
+                        a.AbilityType.ToString()
+                    );
+                }
+
+                AnsiConsole.Write(table);
+            }
+
+            // user selects an ability by it's ID
+            var abilId = AnsiConsole.Ask<int>("Enter [green]ability Id[/]:");
+            // use character id to get the player character
+            var ability = _context.Abilities.Find(abilId);
+            if (ability == null)
+            {
+                AnsiConsole.MarkupLine($"[red]Ability with ID {abilId} not found.[/]");
+                return;
+            }
+
+            // assign the ability to the caracter
+            character.Abilities.Add(ability);
+            _context.SaveChanges();
+
+            _logger.LogInformation("Ability {Name} added to Character {name}", ability.Name, character.Name);
+            AnsiConsole.MarkupLine("[green]Ability added successfully![/]");
+            Thread.Sleep(1000);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding ability");
+            AnsiConsole.MarkupLine($"[red]Error adding ability: {ex.Message}[/]");
+            PressAnyKey();
+        }
 
         // TODO: Implement this method
-        AnsiConsole.MarkupLine("[red]This feature is not yet implemented.[/]");
-        AnsiConsole.MarkupLine("[yellow]TODO: Allow users to add abilities to existing characters.[/]");
+        //AnsiConsole.MarkupLine("[red]This feature is not yet implemented.[/]");
+        //AnsiConsole.MarkupLine("[yellow]TODO: Allow users to add abilities to existing characters.[/]");
 
-        PressAnyKey();
+        //PressAnyKey();
     }
 
     /// <summary>
     /// TODO: Implement this method
     /// Requirements:
-    /// - Prompt the user to select a character (by ID or name)
+    /// - Prompt the user to select a character (by ID or name) **
     /// - Retrieve the character and their abilities from the database (use Include or lazy loading)
     /// - Display the character's name and basic info
     /// - Display all abilities associated with that character in a formatted table
@@ -251,8 +322,30 @@ public class AdminService
     /// </summary>
     public void DisplayCharacterAbilities()
     {
-        _logger.LogInformation("User selected Display Character Abilities");
-        AnsiConsole.MarkupLine("[yellow]=== Display Character Abilities ===[/]");
+        try
+        {
+            _logger.LogInformation("User selected Display Character Abilities");
+            AnsiConsole.MarkupLine("[yellow]=== Display Character Abilities ===[/]");
+
+            // user enters id of a character
+            var id = AnsiConsole.Ask<int>("Enter character [green]ID[/] to edit:");
+            var player = _context.Players.Find(id);
+            if (player == null)
+            {
+                _logger.LogWarning("Character with Id {Id} not found", id);
+                AnsiConsole.MarkupLine($"[red]Character with ID {id} not found.[/]");
+                return;
+            }
+
+            // TODO: get character from database (example in week 12 example)
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error displaying character abilities");
+            AnsiConsole.MarkupLine($"[red]Error displaying character abilities: {ex.Message}[/]");
+            PressAnyKey();
+        }
+        
 
         // TODO: Implement this method
         AnsiConsole.MarkupLine("[red]This feature is not yet implemented.[/]");
