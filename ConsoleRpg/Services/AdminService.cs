@@ -3,6 +3,7 @@ using ConsoleRpgEntities.Models.Abilities.PlayerAbilities;
 using ConsoleRpgEntities.Models.Characters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Spectre.Console;
 using System.Numerics;
 
@@ -215,19 +216,6 @@ public class AdminService
     #endregion
 
     #region C-Level Requirements
-
-    /// <summary>
-    /// TODO: Implement this method
-    /// Requirements:
-    /// - Display a list of existing characters **
-    /// - Prompt user to select a character (by ID) **
-    /// - Display a list of available abilities from the database **
-    /// - Prompt user to select an ability to add **
-    /// - Associate the ability with the character using the many-to-many relationship **
-    /// - Save changes to the database **
-    /// - Display confirmation message with the character name and ability name **
-    /// - Log the operation **
-    /// </summary>
     public void AddAbilityToCharacter()
     {
         try
@@ -251,7 +239,7 @@ public class AdminService
             // get a list of all the abilities
             var abilities = _context.Abilities;
             // check to see if there are any abilities
-            if(!abilities.Any())
+            if (!abilities.Any())
             {
                 AnsiConsole.MarkupLine("[red]No abilities found.[/]");
             }
@@ -301,24 +289,18 @@ public class AdminService
             AnsiConsole.MarkupLine($"[red]Error adding ability: {ex.Message}[/]");
             PressAnyKey();
         }
-
-        // TODO: Implement this method
-        //AnsiConsole.MarkupLine("[red]This feature is not yet implemented.[/]");
-        //AnsiConsole.MarkupLine("[yellow]TODO: Allow users to add abilities to existing characters.[/]");
-
-        //PressAnyKey();
     }
 
     /// <summary>
     /// TODO: Implement this method
     /// Requirements:
     /// - Prompt the user to select a character (by ID or name) **
-    /// - Retrieve the character and their abilities from the database (use Include or lazy loading)
-    /// - Display the character's name and basic info
-    /// - Display all abilities associated with that character in a formatted table
-    /// - For each ability, show: Name, Description, and any other relevant properties (e.g., Damage, Distance for ShoveAbility)
-    /// - Handle the case where the character has no abilities
-    /// - Log the operation
+    /// - Retrieve the character and their abilities from the database (use Include or lazy loading) **
+    /// - Display the character's name and basic info **
+    /// - Display all abilities associated with that character in a formatted table 
+    /// - For each ability, show: Name, Description, and any other relevant properties (e.g., Damage, Distance for ShoveAbility) 
+    /// - Handle the case where the character has no abilities **
+    /// - Log the operation **
     /// </summary>
     public void DisplayCharacterAbilities()
     {
@@ -328,7 +310,7 @@ public class AdminService
             AnsiConsole.MarkupLine("[yellow]=== Display Character Abilities ===[/]");
 
             // user enters id of a character
-            var id = AnsiConsole.Ask<int>("Enter character [green]ID[/] to edit:");
+            var id = AnsiConsole.Ask<int>("Enter character [green]ID[/] to see abilities:");
             var player = _context.Players.Find(id);
             if (player == null)
             {
@@ -337,7 +319,52 @@ public class AdminService
                 return;
             }
 
-            // TODO: get character from database (example in week 12 example)
+            // Get the abilities from the character previously selected
+            var abilities = player.Abilities;
+
+            // display the character and their abilities
+            AnsiConsole.MarkupLine($"Character Name: [blue]{player.Name}[/]");
+            AnsiConsole.MarkupLine($"Character Experience: [blue]{player.Experience}[/]");
+            AnsiConsole.MarkupLine($"Character health: [blue]{player.Health}[/]");
+            AnsiConsole.MarkupLine($"Character Abilities:");
+
+            // if selected character has abilities then they will be displayed in  table,
+            // otherwise a message will be displayed saying the character has no abilities
+            if (!abilities.Any())
+            {
+                AnsiConsole.MarkupLine($"[red]Selected character does not possess and abilities[/]");
+            }
+            else
+            {
+                var table = new Table();
+                table.AddColumn("Name");
+                table.AddColumn("Description");
+                table.AddColumn("AbilityType");
+                table.AddColumn("Damage");
+                table.AddColumn("Distance");
+
+                foreach (var ability in abilities)
+                {
+
+                    table.AddRow(
+                        ability.Name,
+                        ability.Description,
+                        ability.AbilityType
+                        //ability.Damage?.ToString() ?? "Null",
+                        //ability.Distance?.ToString() ?? "Null"
+
+                    // TODO: get damage and distance stats working
+                    );
+                }
+
+                AnsiConsole.Write(table);
+            }
+            // TODO: ask about ability type
+
+            //_logger.LogInformation("User looked at character abilities of {character}", player.Name);
+            //Thread.Sleep(1000);
+
+            PressAnyKey();
         }
         catch (Exception ex)
         {
@@ -345,13 +372,6 @@ public class AdminService
             AnsiConsole.MarkupLine($"[red]Error displaying character abilities: {ex.Message}[/]");
             PressAnyKey();
         }
-        
-
-        // TODO: Implement this method
-        AnsiConsole.MarkupLine("[red]This feature is not yet implemented.[/]");
-        AnsiConsole.MarkupLine("[yellow]TODO: Display all abilities for a selected character.[/]");
-
-        PressAnyKey();
     }
 
     #endregion
