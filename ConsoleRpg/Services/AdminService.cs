@@ -291,17 +291,6 @@ public class AdminService
         }
     }
 
-    /// <summary>
-    /// TODO: Implement this method
-    /// Requirements:
-    /// - Prompt the user to select a character (by ID or name) **
-    /// - Retrieve the character and their abilities from the database (use Include or lazy loading) **
-    /// - Display the character's name and basic info **
-    /// - Display all abilities associated with that character in a formatted table 
-    /// - For each ability, show: Name, Description, and any other relevant properties (e.g., Damage, Distance for ShoveAbility) 
-    /// - Handle the case where the character has no abilities **
-    /// - Log the operation **
-    /// </summary>
     public void DisplayCharacterAbilities()
     {
         try
@@ -345,24 +334,45 @@ public class AdminService
 
                 foreach (var ability in abilities)
                 {
+                    if (ability is ShoveAbility shove)
+                    {
+                        table.AddRow(
+                            shove.Name,
+                            shove.Description,
+                            shove.AbilityType,
+                            shove.Damage.ToString(),
+                            shove.Distance.ToString()
+                        );
+                    }
 
-                    table.AddRow(
-                        ability.Name,
-                        ability.Description,
-                        ability.AbilityType
-                        //ability.Damage?.ToString() ?? "Null",
-                        //ability.Distance?.ToString() ?? "Null"
+                    if (ability is MagicAbility magic)
+                    {
+                        table.AddRow(
+                            magic.Name,
+                            magic.Description,
+                            magic.AbilityType,
+                            magic.Damage.ToString(),
+                            "NULL"
+                        );
+                    }
 
-                    // TODO: get damage and distance stats working
-                    );
+                    if (ability is PhysAbility phys)
+                    {
+                        table.AddRow(
+                            phys.Name,
+                            phys.Description,
+                            phys.AbilityType,
+                            phys.Damage.ToString(),
+                            "NULL"
+                        );
+                    }
                 }
 
                 AnsiConsole.Write(table);
             }
-            // TODO: ask about ability type
 
-            //_logger.LogInformation("User looked at character abilities of {character}", player.Name);
-            //Thread.Sleep(1000);
+            _logger.LogInformation("User looked at character abilities of {character}", player.Name);
+            Thread.Sleep(1000);
 
             PressAnyKey();
         }

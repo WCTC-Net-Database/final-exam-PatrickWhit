@@ -29,7 +29,9 @@ namespace ConsoleRpgEntities.Data
 
             modelBuilder.Entity<Ability>()
                 .HasDiscriminator<string>(pa => pa.AbilityType)
-                .HasValue<ShoveAbility>("ShoveAbility");
+                .HasValue<ShoveAbility>("ShoveAbility")
+                .HasValue<MagicAbility>("MagicAbility")
+                .HasValue<PhysAbility>("PhysAbility");
 
             // Keep Player<->Ability join-table name if you must preserve existing schema
             modelBuilder.Entity<Player>()

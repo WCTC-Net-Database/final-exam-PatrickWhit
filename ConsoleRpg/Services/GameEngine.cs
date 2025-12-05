@@ -149,7 +149,8 @@ public class GameEngine
                 HandleActionResult(_playerService.ShowCharacterStats(_currentPlayer));
                 break;
             case "Attack Monster":
-                HandleActionResult(_playerService.AttackMonster());
+                //ConsoleRpgEntities.Models.Characters.Monsters.Monster? monster = GetFirstMonster();
+                HandleActionResult(_playerService.AttackMonster(monster));
                 break;
             case "Use Ability":
                 HandleActionResult(_playerService.UseAbilityOnMonster());

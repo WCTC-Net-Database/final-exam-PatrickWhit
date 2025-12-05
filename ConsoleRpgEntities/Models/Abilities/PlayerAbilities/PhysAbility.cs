@@ -3,14 +3,12 @@ using ConsoleRpgEntities.Models.Characters;
 
 namespace ConsoleRpgEntities.Models.Abilities.PlayerAbilities
 {
-    public class ShoveAbility : Ability
+    public class PhysAbility : Ability
     {
-        public int Distance { get; set; }
-
         public override void Activate(IPlayer user, ITargetable target)
         {
             // Shove ability logic
-            Console.WriteLine($"{user.Name} shoves {target.Name} back {Distance} feet, dealing {Damage} damage!");
+            Console.WriteLine($"{user.Name} attacks {target.Name}, dealing {Damage} damage!");
         }
     }
 }

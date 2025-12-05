@@ -4,6 +4,7 @@ using ConsoleRpgEntities.Models.Characters;
 using ConsoleRpgEntities.Models.Rooms;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Spectre.Console;
 
 namespace ConsoleRpg.Services;
 
@@ -129,12 +130,28 @@ public class PlayerService
     /// <summary>
     /// TODO: Implement monster attack logic
     /// </summary>
-    public ServiceResult AttackMonster()
+    public ServiceResult AttackMonster(Player player)
     {
-        _logger.LogInformation("Attack monster feature called (not yet implemented)");
-        return ServiceResult.Ok(
-            "[yellow]Attack (TODO)[/]",
-            "[yellow]TODO: Implement attack logic - students will complete this feature.[/]");
+        try
+        {
+            player.Attack();
+
+            _logger.LogInformation("Attack monster feature called (not yet fully implemented)");
+
+            return ServiceResult.Ok(
+                "[yellow]Attack (TODO)[/]",
+                "[yellow]TODO: Implement attack logic - students will complete this feature.[/]");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error attacking monster");
+            AnsiConsole.MarkupLine($"[red]Error attacking monster: {ex.Message}[/]");
+
+            return ServiceResult.Fail(
+                "[red]Error[/]",
+                $"[red]Failed to attack monster: {ex.Message}[/]");
+        }
+        
         // Students will implement this
     }
 
@@ -143,7 +160,7 @@ public class PlayerService
     /// </summary>
     public ServiceResult UseAbilityOnMonster()
     {
-        _logger.LogInformation("Use ability feature called (not yet implemented)");
+        _logger.LogInformation("Use ability feature called (not yet fully implemented)");
         return ServiceResult.Ok(
             "[yellow]Ability (TODO)[/]",
             "[yellow]TODO: Implement ability usage - students will complete this feature.[/]");
