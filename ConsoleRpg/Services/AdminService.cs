@@ -1,6 +1,7 @@
 using ConsoleRpgEntities.Data;
 using ConsoleRpgEntities.Models.Abilities.PlayerAbilities;
 using ConsoleRpgEntities.Models.Characters;
+using ConsoleRpgEntities.Models.Rooms;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -227,7 +228,7 @@ public class AdminService
             DisplayAllCharacters();
 
             // user selects a character by their ID
-            var charId = AnsiConsole.Ask<int>("Enter [green]character Id[/]:");
+            var charId = AnsiConsole.Ask<int>("Enter [green]character Id[/]: ");
             // use character id to get the player character
             var character = _context.Players.Find(charId);
             if (character == null)
@@ -266,7 +267,7 @@ public class AdminService
             }
 
             // user selects an ability by it's ID
-            var abilId = AnsiConsole.Ask<int>("Enter [green]ability Id[/]:");
+            var abilId = AnsiConsole.Ask<int>("Enter [green]ability Id[/]: ");
             // use character id to get the player character
             var ability = _context.Abilities.Find(abilId);
             if (ability == null)
@@ -299,7 +300,7 @@ public class AdminService
             AnsiConsole.MarkupLine("[yellow]=== Display Character Abilities ===[/]");
 
             // user enters id of a character
-            var id = AnsiConsole.Ask<int>("Enter character [green]ID[/] to see abilities:");
+            var id = AnsiConsole.Ask<int>("Enter character [green]ID[/] to see abilities: ");
             var player = _context.Players.Find(id);
             if (player == null)
             {
@@ -388,49 +389,130 @@ public class AdminService
 
     #region B-Level Requirements
 
-    /// <summary>
-    /// TODO: Implement this method
-    /// Requirements:
-    /// - Prompt user for room name
-    /// - Prompt user for room description
-    /// - Optionally prompt for navigation (which rooms connect in which directions)
-    /// - Create a new Room entity
-    /// - Save to the database
-    /// - Display confirmation with room details
-    /// - Log the operation
-    /// </summary>
     public void AddRoom()
     {
-        _logger.LogInformation("User selected Add Room");
-        AnsiConsole.MarkupLine("[yellow]=== Add New Room ===[/]");
+        try
+        {
+            _logger.LogInformation("User selected Add Room");
+            AnsiConsole.MarkupLine("[yellow]=== Add New Room ===[/]");
 
-        // TODO: Implement this method
-        AnsiConsole.MarkupLine("[red]This feature is not yet implemented.[/]");
-        AnsiConsole.MarkupLine("[yellow]TODO: Allow users to create new rooms and connect them to the world.[/]");
+            var name = AnsiConsole.Ask<string>("Enter room [green]name[/]: ");
+            var description = AnsiConsole.Ask<string>("Enter room [green]description[/]: ");
+
+            var room = new Room
+            {
+                Name = name,
+                Description = description
+            };
+
+            _context.Rooms.Add(room);
+            _context.SaveChanges();
+
+            _logger.LogInformation("Room {Name} added to database with Id {Id}", name, room.Id);
+            AnsiConsole.MarkupLine($"[green]Room '{name}' added successfully![/]");
+            Thread.Sleep(1000);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding room");
+            AnsiConsole.MarkupLine($"[red]Error adding room: {ex.Message}[/]");
+        }
 
         PressAnyKey();
     }
 
-    /// <summary>
-    /// TODO: Implement this method
-    /// Requirements:
-    /// - Display a list of all rooms
-    /// - Prompt user to select a room (by ID or name)
-    /// - Retrieve room from database with related data (Include Players and Monsters)
-    /// - Display room name, description, and exits
-    /// - Display list of all players in the room (or message if none)
-    /// - Display list of all monsters in the room (or message if none)
-    /// - Handle case where room is empty gracefully
-    /// - Log the operation
-    /// </summary>
     public void DisplayRoomDetails()
     {
-        _logger.LogInformation("User selected Display Room Details");
-        AnsiConsole.MarkupLine("[yellow]=== Display Room Details ===[/]");
+        try
+        {
+            _logger.LogInformation("User selected Display Room Details");
+            AnsiConsole.MarkupLine("[yellow]=== Display Room Details ===[/]");
 
-        // TODO: Implement this method
-        AnsiConsole.MarkupLine("[red]This feature is not yet implemented.[/]");
-        AnsiConsole.MarkupLine("[yellow]TODO: Display detailed information about a room and its inhabitants.[/]");
+            // get a list of all the rooms
+            var rooms = _context.Rooms
+                .ToList();
+
+            // if no rooms found then display message, else list all the rooms in a table
+            if(!rooms.Any())
+            {
+                AnsiConsole.MarkupLine("[red]No rooms found.[/]");
+            }
+            else
+            {
+                var table = new Table();
+                table.AddColumn("ID");
+                table.AddColumn("Name");
+                table.AddColumn("Description");
+
+                foreach (var room in rooms)
+                {
+                    table.AddRow(
+                        room.Id.ToString(),
+                        room.Name,
+                        room.Description
+                    );
+                }
+
+                AnsiConsole.Write(table);
+            }
+
+            // ask user to enter room Id
+            var roomId = AnsiConsole.Ask<string>("Enter room [green]Id[/]: ");
+
+            // find the room using the Id, if no room found then display a message and return
+            var selectedRoom = _context.Rooms
+                .Include(r => r.Players)
+                .Include(r => r.Monsters);
+            var r = selectedRoom.ToList().Find(r => r.Id == Convert.ToInt32(roomId));
+            if (r == null)
+            {
+                AnsiConsole.MarkupLine($"[red]Room with ID {roomId} not found.[/]");
+                return;
+            }
+
+            // list room info
+            AnsiConsole.MarkupLine($"Name: [Blue]{r.Name}[/]");
+            AnsiConsole.MarkupLine($"Description: [Blue]{r.Description}[/]");
+            AnsiConsole.MarkupLine($"North Exit: [Blue]{r.NorthRoom?.Name}[/]");
+            AnsiConsole.MarkupLine($"South Exit: [Blue]{r.SouthRoom?.Name}[/]");
+            AnsiConsole.MarkupLine($"East Exit: [Blue]{r.EastRoom?.Name}[/]");
+            AnsiConsole.MarkupLine($"West Exit: [Blue]{r.WestRoom?.Name}[/]");
+
+            // display all players in the room, if there are non then display a message
+            var players = r.Players;
+            if (players.Count() == 0)
+            {
+                AnsiConsole.MarkupLine($"[yellow]There are no players in the room[/]");
+            }
+            else
+            {
+                Console.WriteLine("List of players in the room:");
+                foreach (var player in players)
+                {
+                    AnsiConsole.MarkupLine($"Name: [blue]{player.Name}[/]");
+                }
+            }
+
+            // display all monsters in the room, if there are non then display a message
+            var monsters = r.Monsters;
+            if (monsters.Count() == 0)
+            {
+                AnsiConsole.MarkupLine($"[yellow]There are no monsters in the room[/]");
+            }
+            else
+            {
+                Console.WriteLine("List of monsters in the room:");
+                foreach (var monster in monsters)
+                {
+                    AnsiConsole.MarkupLine($"Name: [blue]{monster.Name}[/]");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error displaying room");
+            AnsiConsole.MarkupLine($"[red]Error displaying room: {ex.Message}[/]");
+        }
 
         PressAnyKey();
     }
@@ -442,19 +524,183 @@ public class AdminService
     /// <summary>
     /// TODO: Implement this method
     /// Requirements:
-    /// - Display list of all rooms
-    /// - Prompt user to select a room
-    /// - Display a menu of attributes to filter by (Health, Name, Experience, etc.)
-    /// - Prompt user for filter criteria
+    /// - Display list of all rooms **
+    /// - Prompt user to select a room **
+    /// - Display a menu of attributes to filter by (Health, Name, Experience, etc.) **
+    /// - Prompt user for filter criteria **
     /// - Query the database for characters in that room matching the criteria
     /// - Display matching characters with relevant details in a formatted table
-    /// - Handle case where no characters match
-    /// - Log the operation
+    /// - Handle case where no characters match **
+    /// - Log the operation **
     /// </summary>
     public void ListCharactersInRoomByAttribute()
     {
-        _logger.LogInformation("User selected List Characters in Room by Attribute");
-        AnsiConsole.MarkupLine("[yellow]=== List Characters in Room by Attribute ===[/]");
+        try
+        {
+            _logger.LogInformation("User selected List Characters in Room by Attribute");
+            AnsiConsole.MarkupLine("[yellow]=== List Characters in Room by Attribute ===[/]");
+
+            // get rooms and put them into a variable
+            var rooms = _context.Rooms;
+
+            // display all the rooms in a table
+            var table = new Table();
+            table.AddColumn("ID");
+            table.AddColumn("Name");
+            table.AddColumn("Description");
+
+            foreach (var room in rooms)
+            {
+                table.AddRow(
+                    room.Id.ToString(),
+                    room.Name,
+                    room.Description
+                );
+            }
+
+            AnsiConsole.Write(table);
+
+            // get the user to select a room by entering an id
+            var roomId = AnsiConsole.Ask<string>("Enter room [green]Id[/] of the room you wish to look at: ");
+
+            // Display a list of attributes that the user can filter by and ask them to select one
+            AnsiConsole.MarkupLine("Please enter an attribute you wish to search by:");
+            AnsiConsole.MarkupLine("    [blue]Name[/]");
+            AnsiConsole.MarkupLine("    [blue]Health[/]");
+            AnsiConsole.MarkupLine("    [blue]Experience[/]");
+            AnsiConsole.MarkupLine("    [blue]Equipment Name[/]");
+            AnsiConsole.MarkupLine("    [blue]Ability Type[/]");
+            var ask = AnsiConsole.Ask<string>("Enter the attribute: ");
+
+            // convert all characters to lower case
+            ask.ToLower();
+
+            // based on which attribute the user selected, the program will use that to dertermine hot to search in the room
+            switch(ask)
+            {
+                case "name":
+                    var name = AnsiConsole.Ask<string>("Enter the name of the character you wish to search for: ");
+
+                    // search for the character using the name
+                    var cha = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId)
+                                                    && c.Name == name);
+
+                    // if no players are found them say so, else display players
+                    if (cha.Count() == 0)
+                    {
+                        AnsiConsole.MarkupLine("[yellow]No characters by that name were found in the room.[/]");
+                    }
+                    else
+                    {
+                        Console.WriteLine("List of characters that match criteria:");
+                        foreach (var c in cha)
+                        {
+                            AnsiConsole.MarkupLine($"   [blue]{c.Name}[/]");
+                        }
+                    }
+                        break;
+                case "health":
+                    var health = AnsiConsole.Ask<string>("Enter the health of the character you wish to search for: ");
+
+                    // search for the character using the health amount
+                    var cha1 = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId)
+                                                    && c.Health == Convert.ToInt32(health));
+
+                    // if no players are found them say so, else display players
+                    if (cha1.Count() == 0)
+                    {
+                        AnsiConsole.MarkupLine("[yellow]No characters with that health amount were found in the room.[/]");
+                    }
+                    else
+                    {
+                        Console.WriteLine("List of characters that match criteria:");
+                        foreach (var c in cha1)
+                        {
+                            AnsiConsole.MarkupLine($"   [blue]{c.Name}[/]");
+                        }
+                    }
+                    break;
+                case "experience":
+                    var exp = AnsiConsole.Ask<string>("Enter the experiennce level of the character you wish to search for: ");
+
+                    // search for the character using the experience level
+                    var cha2 = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId)
+                                                    && c.Experience == Convert.ToInt32(exp));
+
+                    // if no players are found them say so, else display players
+                    if (cha2.Count() == 0)
+                    {
+                        AnsiConsole.MarkupLine("[yellow]No characters with that experience level were found in the room.[/]");
+                    }
+                    else
+                    {
+                        Console.WriteLine("List of characters that match criteria:");
+                        foreach (var c in cha2)
+                        {
+                            AnsiConsole.MarkupLine($"   [blue]{c.Name}[/]");
+                        }
+                    }
+                    break;
+                // TODO: figure out searching by item character has
+                case "item name":
+                    var itemName = AnsiConsole.Ask<string>("Enter the name of the item the character has you wish to search for: ");
+
+                    //// get the item id from the name the user entered
+                    //var item = _context.Items.Where(i => i.Name == itemName);
+                    //var itemId = item.Select(i => i.Id);
+
+                    //// search for the character using the equipment type
+                    //var cha3 = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId)
+                    //                                && c.Equipment.Id == itemId);
+
+                    //// if no players are found them say so, else display players
+                    //if (cha3.Count() == 0)
+                    //{
+                    //    AnsiConsole.MarkupLine("[yellow]No characters with that experience level were found in the room.[/]");
+                    //}
+                    //else
+                    //{
+                    //    Console.WriteLine("List of characters that match criteria:");
+                    //    foreach (var c in cha3)
+                    //    {
+                    //        AnsiConsole.MarkupLine($" [blue]{c.Name}[/]");
+                    //    }
+                    //}
+                    break;
+                // TODO: figure out searching by ability type of ability character has
+                case "ability type":
+                    var abilType = AnsiConsole.Ask<string>("Enter the ability type of the character you wish to search for: ");
+
+                    var abilityType = _context.Abilities.Select(a => a.AbilityType);
+
+                    // search for the character using the ability type of an ability they have
+                    var cha4 = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId)
+                                                    && c.Abilities.AbilityType == abilType);
+
+                    // if no players are found them say so, else display players
+                    if (cha4.Count() == 0)
+                    {
+                        AnsiConsole.MarkupLine("[yellow]No characters with that experience level were found in the room.[/]");
+                    }
+                    else
+                    {
+                        Console.WriteLine("List of characters that match criteria:");
+                        foreach (var c in cha4)
+                        {
+                            AnsiConsole.MarkupLine($"   [blue]{c.Name}[/]");
+                        }
+                    }
+                    break;
+                default:
+                    AnsiConsole.MarkupLine("[red]Invalid option entered, try again[/]");
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error listing characters in room by attribute");
+            AnsiConsole.MarkupLine($"[red]Error listing characters in room by attribute: {ex.Message}[/]");
+        }
 
         // TODO: Implement this method
         AnsiConsole.MarkupLine("[red]This feature is not yet implemented.[/]");

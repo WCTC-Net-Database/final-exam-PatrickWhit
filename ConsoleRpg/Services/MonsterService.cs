@@ -1,4 +1,5 @@
 ﻿using ConsoleRpgEntities.Data;
+using ConsoleRpgEntities.Models.Characters.Monsters;
 
 namespace ConsoleRpg.Services
 {
@@ -6,9 +7,14 @@ namespace ConsoleRpg.Services
     {
         private readonly GameContext _context;
 
-        private ConsoleRpgEntities.Models.Characters.Monsters.Monster? GetFirstMonster()
+        public MonsterService(GameContext context)
         {
-            return _currentRoom.Monsters.FirstOrDefault();
+            _context = context;
+        }
+
+        public Monster? GetFirstMonsterInRoom(int roomId)
+        {
+            return _context.Monsters.Where(m => m.RoomId == roomId).FirstOrDefault();
         }
     }
 }

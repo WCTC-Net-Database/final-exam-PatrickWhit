@@ -1,6 +1,8 @@
 using ConsoleRpg.Models;
 using ConsoleRpgEntities.Data;
+using ConsoleRpgEntities.Models.Abilities.PlayerAbilities;
 using ConsoleRpgEntities.Models.Characters;
+using ConsoleRpgEntities.Models.Characters.Monsters;
 using ConsoleRpgEntities.Models.Rooms;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -130,17 +132,17 @@ public class PlayerService
     /// <summary>
     /// TODO: Implement monster attack logic
     /// </summary>
-    public ServiceResult AttackMonster(Player player)
+    public ServiceResult AttackMonster(Player player, Monster monster)
     {
         try
         {
-            player.Attack();
+            var outputMessage = player.Attack(monster);
 
-            _logger.LogInformation("Attack monster feature called (not yet fully implemented)");
+            _logger.LogInformation($"{player} attacking monster {monster}");
 
             return ServiceResult.Ok(
-                "[yellow]Attack (TODO)[/]",
-                "[yellow]TODO: Implement attack logic - students will complete this feature.[/]");
+                "[blue]player attacked a monster[/]",
+                $"[blue]{outputMessage}[/]");
         }
         catch (Exception ex)
         {
@@ -151,19 +153,31 @@ public class PlayerService
                 "[red]Error[/]",
                 $"[red]Failed to attack monster: {ex.Message}[/]");
         }
-        
-        // Students will implement this
     }
 
     /// <summary>
     /// TODO: Implement ability usage logic
     /// </summary>
-    public ServiceResult UseAbilityOnMonster()
+    public ServiceResult UseAbilityOnMonster(Player player, Monster monster, Ability ability)
     {
-        _logger.LogInformation("Use ability feature called (not yet fully implemented)");
-        return ServiceResult.Ok(
-            "[yellow]Ability (TODO)[/]",
-            "[yellow]TODO: Implement ability usage - students will complete this feature.[/]");
-        // Students will implement this
+        try
+        {
+            player.UseAbility(ability, monster);
+
+            _logger.LogInformation("Attack monster feature called (not yet fully implemented)");
+
+            return ServiceResult.Ok(
+                "[blue]player used an ability on a monster[/]",
+                "[blue]player used an ability on a monster[/]");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error using ability on monster");
+            AnsiConsole.MarkupLine($"[red]Error using ability on monster: {ex.Message}[/]");
+
+            return ServiceResult.Fail(
+                "[red]Error[/]",
+                $"[red]Failed to attack monster: {ex.Message}[/]");
+        }
     }
 }

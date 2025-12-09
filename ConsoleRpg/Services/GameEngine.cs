@@ -1,7 +1,9 @@
 using ConsoleRpg.Helpers;
 using ConsoleRpg.Models;
 using ConsoleRpgEntities.Data;
+using ConsoleRpgEntities.Models.Abilities.PlayerAbilities;
 using ConsoleRpgEntities.Models.Characters;
+using ConsoleRpgEntities.Models.Characters.Monsters;
 using ConsoleRpgEntities.Models.Rooms;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -16,6 +18,7 @@ public class GameEngine
     private readonly MapManager _mapManager;
     private readonly ExplorationUI _explorationUI;
     private readonly PlayerService _playerService;
+    private readonly MonsterService _monsterService;
     private readonly AdminService _adminService;
     private readonly ILogger<GameEngine> _logger;
 
@@ -24,7 +27,7 @@ public class GameEngine
     private GameMode _currentMode = GameMode.Exploration;
 
     public GameEngine(GameContext context, MenuManager menuManager, MapManager mapManager,
-                     ExplorationUI explorationUI, PlayerService playerService,
+                     ExplorationUI explorationUI, PlayerService playerService, MonsterService monsterService,
                      AdminService adminService, ILogger<GameEngine> logger)
     {
         _context = context;
@@ -32,6 +35,7 @@ public class GameEngine
         _mapManager = mapManager;
         _explorationUI = explorationUI;
         _playerService = playerService;
+        _monsterService = monsterService;
         _adminService = adminService;
         _logger = logger;
     }
@@ -149,11 +153,13 @@ public class GameEngine
                 HandleActionResult(_playerService.ShowCharacterStats(_currentPlayer));
                 break;
             case "Attack Monster":
-                //ConsoleRpgEntities.Models.Characters.Monsters.Monster? monster = GetFirstMonster();
-                HandleActionResult(_playerService.AttackMonster(monster));
+                Monster? monster = _monsterService.GetFirstMonsterInRoom(_currentRoom.Id);
+                HandleActionResult(_playerService.AttackMonster(_currentPlayer, monster));
                 break;
             case "Use Ability":
-                HandleActionResult(_playerService.UseAbilityOnMonster());
+                Monster? monster2 = _monsterService.GetFirstMonsterInRoom(_currentRoom.Id);
+                Ability? ability = _currentPlayer.Abilities.FirstOrDefault();
+                HandleActionResult(_playerService.UseAbilityOnMonster(_currentPlayer, monster2, ability));
                 break;
             case "Return to Main Menu":
                 _currentMode = GameMode.Admin;

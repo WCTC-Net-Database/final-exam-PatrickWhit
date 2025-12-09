@@ -49,6 +49,7 @@ public static class Startup
         services.AddTransient<GameEngine>();
         services.AddTransient<MenuManager>();
         services.AddTransient<PlayerService>();
+        services.AddTransient<MonsterService>();
         services.AddTransient<AdminService>();
         services.AddSingleton<OutputManager>();
         services.AddSingleton<MapManager>();

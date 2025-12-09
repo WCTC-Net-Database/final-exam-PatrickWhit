@@ -27,13 +27,21 @@ namespace ConsoleRpgEntities.Models.Characters
             Abilities = new List<Ability>();
         }
 
-        public void Attack(ITargetable target)
+        public string Attack(ITargetable target)
         {
             // Player-specific attack logic
-            Console.WriteLine($"{Name} attacks {target.Name} with a {Equipment.Weapon.Name} dealing {Equipment.Weapon.Attack} damage!");
-            target.Health -= Equipment.Weapon.Attack;
-            System.Console.WriteLine($"{target.Name} has {target.Health} health remaining.");
-
+            if (Equipment == null)
+            {
+                Console.WriteLine($"{Name} attacks {target.Name} with their fist dealing 1 damage!");
+                target.Health -= 1;
+                return ($"{target.Name} has {target.Health} health remaining.");
+            }
+            else
+            {
+                Console.WriteLine($"{Name} attacks {target.Name} with a {Equipment.Weapon.Name} dealing {Equipment.Weapon.Attack} damage!");
+                target.Health -= Equipment.Weapon.Attack;
+                return ($"{target.Name} has {target.Health} health remaining.");
+            }
         }
 
         public void UseAbility(IAbility ability, ITargetable target)
