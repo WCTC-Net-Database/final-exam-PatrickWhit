@@ -529,17 +529,17 @@ public class AdminService
     /// - Display a menu of attributes to filter by (Health, Name, Experience, etc.) **
     /// - Prompt user for filter criteria **
     /// - Query the database for characters in that room matching the criteria
-    /// - Display matching characters with relevant details in a formatted table
+    /// - Display matching characters with relevant details in a formatted table **
     /// - Handle case where no characters match **
     /// - Log the operation **
     /// </summary>
     public void ListCharactersInRoomByAttribute()
     {
+        _logger.LogInformation("User selected List Characters in Room by Attribute");
+        AnsiConsole.MarkupLine("[yellow]=== List Characters in Room by Attribute ===[/]");
+
         try
         {
-            _logger.LogInformation("User selected List Characters in Room by Attribute");
-            AnsiConsole.MarkupLine("[yellow]=== List Characters in Room by Attribute ===[/]");
-
             // get rooms and put them into a variable
             var rooms = _context.Rooms;
 
@@ -780,26 +780,60 @@ public class AdminService
         PressAnyKey();
     }
 
-    /// <summary>
-    /// TODO: Implement this method
-    /// Requirements:
-    /// - Query database for all rooms
-    /// - For each room, retrieve all characters (Players) in that room
-    /// - Display in a formatted list grouped by room
-    /// - Show room name and description
-    /// - Under each room, list all characters with their details
-    /// - Handle rooms with no characters gracefully
-    /// - Consider using Spectre.Console panels or tables for nice formatting
-    /// - Log the operation
-    /// </summary>
     public void ListAllRoomsWithCharacters()
     {
         _logger.LogInformation("User selected List All Rooms with Characters");
         AnsiConsole.MarkupLine("[yellow]=== List All Rooms with Characters ===[/]");
 
-        // TODO: Implement this method
-        AnsiConsole.MarkupLine("[red]This feature is not yet implemented.[/]");
-        AnsiConsole.MarkupLine("[yellow]TODO: Group and display all characters by their rooms.[/]");
+        try
+        {
+            // get all the rooms
+            var rooms = _context.Rooms
+                                .Include(r => r.Players);
+
+            // for each room, list all the player in that room
+            foreach (var room in rooms)
+            {
+                // List room details
+                AnsiConsole.MarkupLine($"\n[green]Room Name[/]: [blue]{room.Name}[/]");
+                AnsiConsole.MarkupLine($"[green]Room Description[/]: {room.Description}");
+                AnsiConsole.MarkupLine("[green]List Of Characters in Room[/]:");
+
+                // get all players in the room
+                var players = room.Players;
+
+                // if there are no players in the room then print a message, else list the characters
+                if (!players.Any())
+                {
+                    AnsiConsole.MarkupLine("[yellow]There are no characters in this room.[/]");
+                }
+                else
+                {
+                    var charListTable = new Table();
+                    charListTable.AddColumn("ID");
+                    charListTable.AddColumn("Name");
+                    charListTable.AddColumn("Experience");
+                    charListTable.AddColumn("Health");
+
+                    foreach (var player in players)
+                    {
+                        charListTable.AddRow(
+                            player.Id.ToString(),
+                            player.Name,
+                            player.Experience.ToString(),
+                            player.Health.ToString()
+                        );
+                    }
+
+                    AnsiConsole.Write(charListTable);
+                } 
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error listing rooms with characters");
+            AnsiConsole.MarkupLine($"[red]Error listing rooms with characters: {ex.Message}[/]");
+        }
 
         PressAnyKey();
     }
@@ -822,6 +856,16 @@ public class AdminService
     {
         _logger.LogInformation("User selected Find Equipment Location");
         AnsiConsole.MarkupLine("[yellow]=== Find Equipment Location ===[/]");
+
+        try
+        {
+
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error finding characters with equipment");
+            AnsiConsole.MarkupLine($"[red]Error finding characters with equipment: {ex.Message}[/]");
+        }
 
         // TODO: Implement this method
         AnsiConsole.MarkupLine("[red]This feature is not yet implemented.[/]");
