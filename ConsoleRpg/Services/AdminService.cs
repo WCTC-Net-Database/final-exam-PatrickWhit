@@ -528,8 +528,8 @@ public class AdminService
     /// - Prompt user to select a room **
     /// - Display a menu of attributes to filter by (Health, Name, Experience, etc.) **
     /// - Prompt user for filter criteria **
-    /// - Query the database for characters in that room matching the criteria
-    /// - Display matching characters with relevant details in a formatted table
+    /// - Query the database for characters in that room matching the criteria **
+    /// - Display matching characters with relevant details in a formatted table **
     /// - Handle case where no characters match **
     /// - Log the operation **
     /// </summary>
@@ -582,112 +582,118 @@ public class AdminService
                     var name = AnsiConsole.Ask<string>("Enter the name of the character you wish to search for: ");
 
                     // search for the character using the name
-                    var cha = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId)
+                    var findCharacterByName = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId)
                                                     && c.Name == name);
 
                     // if no players are found them say so, else display players
-                    if (cha.Count() == 0)
+                    if (!findCharacterByName.Any())
                     {
                         AnsiConsole.MarkupLine("[yellow]No characters by that name were found in the room.[/]");
                     }
                     else
                     {
                         Console.WriteLine("List of characters that match criteria:");
-                        foreach (var c in cha)
+                        foreach (var c in findCharacterByName)
                         {
                             AnsiConsole.MarkupLine($"   [blue]{c.Name}[/]");
                         }
                     }
                         break;
                 case "health":
-                    var health = AnsiConsole.Ask<string>("Enter the health of the character you wish to search for: ");
+                    var health = AnsiConsole.Ask<string>("Enter the minimum health of the character you wish to search for: ");
 
                     // search for the character using the health amount
-                    var cha1 = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId)
-                                                    && c.Health == Convert.ToInt32(health));
+                    var findCharacterByMinHealth = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId)
+                                                    && c.Health <= Convert.ToInt32(health));
 
                     // if no players are found them say so, else display players
-                    if (cha1.Count() == 0)
+                    if (!findCharacterByMinHealth.Any())
                     {
                         AnsiConsole.MarkupLine("[yellow]No characters with that health amount were found in the room.[/]");
                     }
                     else
                     {
                         Console.WriteLine("List of characters that match criteria:");
-                        foreach (var c in cha1)
+                        foreach (var c in findCharacterByMinHealth)
                         {
                             AnsiConsole.MarkupLine($"   [blue]{c.Name}[/]");
                         }
                     }
                     break;
                 case "experience":
-                    var exp = AnsiConsole.Ask<string>("Enter the experiennce level of the character you wish to search for: ");
+                    var exp = AnsiConsole.Ask<string>("Enter the minimum experiennce level of the character you wish to search for: ");
 
                     // search for the character using the experience level
-                    var cha2 = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId)
-                                                    && c.Experience == Convert.ToInt32(exp));
+                    var findCharacterByMinExperience = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId)
+                                                    && c.Experience <= Convert.ToInt32(exp));
 
                     // if no players are found them say so, else display players
-                    if (cha2.Count() == 0)
+                    if (!findCharacterByMinExperience.Any())
                     {
                         AnsiConsole.MarkupLine("[yellow]No characters with that experience level were found in the room.[/]");
                     }
                     else
                     {
                         Console.WriteLine("List of characters that match criteria:");
-                        foreach (var c in cha2)
+                        foreach (var c in findCharacterByMinExperience)
                         {
                             AnsiConsole.MarkupLine($"   [blue]{c.Name}[/]");
                         }
                     }
                     break;
-                // TODO: figure out searching by item character has
-                case "item name":
-                    var itemName = AnsiConsole.Ask<string>("Enter the name of the item the character has you wish to search for: ");
+                case "equipment name":
+                    var itemName = AnsiConsole.Ask<string>("To search for the character, enter the name of the equipment they have: ");
 
-                    //// get the item id from the name the user entered
-                    //var item = _context.Items.Where(i => i.Name == itemName);
-                    //var itemId = item.Select(i => i.Id);
+                    // get the item id from the name the user entered
+                    var item = _context.Items.Where(i => i.Name == itemName);
+                    var itemId = item.Select(i => i.Id).FirstOrDefault();
 
-                    //// search for the character using the equipment type
-                    //var cha3 = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId)
-                    //                                && c.Equipment.Id == itemId);
-
-                    //// if no players are found them say so, else display players
-                    //if (cha3.Count() == 0)
-                    //{
-                    //    AnsiConsole.MarkupLine("[yellow]No characters with that experience level were found in the room.[/]");
-                    //}
-                    //else
-                    //{
-                    //    Console.WriteLine("List of characters that match criteria:");
-                    //    foreach (var c in cha3)
-                    //    {
-                    //        AnsiConsole.MarkupLine($" [blue]{c.Name}[/]");
-                    //    }
-                    //}
-                    break;
-                // TODO: figure out searching by ability type of ability character has
-                case "ability type":
-                    var abilType = AnsiConsole.Ask<string>("Enter the ability type of the character you wish to search for: ");
-
-                    var abilityType = _context.Abilities.Select(a => a.AbilityType);
-
-                    // search for the character using the ability type of an ability they have
-                    var cha4 = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId)
-                                                    && c.Abilities.AbilityType == abilType);
+                    // search for the character using the equipment name
+                    var findCharacterByEquipmentName = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId)
+                                                    && c.Equipment.Id == itemId);
 
                     // if no players are found them say so, else display players
-                    if (cha4.Count() == 0)
+                    if (!findCharacterByEquipmentName.Any())
                     {
                         AnsiConsole.MarkupLine("[yellow]No characters with that experience level were found in the room.[/]");
                     }
                     else
                     {
                         Console.WriteLine("List of characters that match criteria:");
-                        foreach (var c in cha4)
+                        foreach (var c in findCharacterByEquipmentName)
                         {
-                            AnsiConsole.MarkupLine($"   [blue]{c.Name}[/]");
+                            AnsiConsole.MarkupLine($" [blue]{c.Name}[/]");
+                        }
+                    }
+                    break;
+                case "ability type":
+                    // user enters the type of ability they want to search for
+                    AnsiConsole.MarkupLine($"Enter the ability type of the character you wish to search for.");
+                    var type = AnsiConsole.Ask<string>("([blue]ShoveAbility[/], [blue]MagicAbility[/], [blue]PhysAbility[/]): ");
+                    // abilities of that type are located
+                    var abilityType = _context.Abilities.Where(a => a.AbilityType == type);
+
+                    // search for the character using the ability type of an ability they have
+                    var findCharacterByAbilityType = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId)
+                                                                      && c.Abilities == abilityType)
+                                               .Select( c => new
+                                               {
+                                                   CharacterName = c.Name,
+                                                   Abilities = c.Abilities
+                                               }
+                                               );
+
+                    // if no players are found them say so, else display players
+                    if (!findCharacterByAbilityType.Any())
+                    {
+                        AnsiConsole.MarkupLine("[yellow]No characters with that experience level were found in the room.[/]");
+                    }
+                    else
+                    {
+                        Console.WriteLine("List of characters that match criteria:");
+                        foreach (var c in findCharacterByAbilityType)
+                        {
+                            AnsiConsole.MarkupLine($"   [blue]{c.CharacterName}[/]");
                         }
                     }
                     break;
