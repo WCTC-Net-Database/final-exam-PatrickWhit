@@ -719,13 +719,13 @@ public class AdminService
                     }
                     break;
                 case "ability type":
-                    //// user enters the type of ability they want to search for
-                    //AnsiConsole.MarkupLine($"Enter the ability type of the character you wish to search for.");
-                    //var type = AnsiConsole.Ask<string>("([blue]ShoveAbility[/], [blue]MagicAbility[/], [blue]PhysAbility[/]): ");
-                    //// abilities of that type are located
-                    //var abilityType = _context.Abilities.Where(a => a.AbilityType == type);
+                    // user enters the type of ability they want to search for
+                    AnsiConsole.MarkupLine($"Enter the ability type of the character you wish to search for.");
+                    var type = AnsiConsole.Ask<string>("([blue]ShoveAbility[/], [blue]MagicAbility[/], [blue]PhysAbility[/]): ");
+                    // abilities of that type are located
+                    var abilityType = _context.Abilities.Where(a => a.AbilityType == type);
 
-                    //// search for the character using the ability type of an ability they have
+                    // search for the character using the ability type of an ability they have
                     //var findCharacterByAbilityType = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId)
                     //                                                  && c.Abilities == abilityType)
                     //                           .Select(c => new
@@ -735,32 +735,42 @@ public class AdminService
                     //                           }
                     //                           );
 
-                    //// if no players are found them say so, else display players
-                    //if (!findCharacterByAbilityType.Any())
-                    //{
-                    //    AnsiConsole.MarkupLine("[yellow]No characters with that experience level were found in the room.[/]");
-                    //}
-                    //else
-                    //{
-                    //    // List all the characters that match the criteria
-                    //    var charListTable = new Table();
-                    //    charListTable.AddColumn("ID");
-                    //    charListTable.AddColumn("Name");
-                    //    charListTable.AddColumn("Experience");
-                    //    charListTable.AddColumn("Health");
+                    var findPlayersInRoom = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId));
 
-                    //    foreach (var character in findCharacterByAbilityType)
-                    //    {
-                    //        charListTable.AddRow(
-                    //            character.Id.ToString(),
-                    //            character.Name,
-                    //            character.Experience.ToString(),
-                    //            character.Health.ToString()
-                    //        );
-                    //    }
+                    var findCharacterByAbilityType = findPlayersInRoom.Select(c => new
+                                                                                {
+                                                                                    CharacterName = c.Name,
+                                                                                    Abilities = c.Abilities
+                                                                                });
 
-                    //    AnsiConsole.Write(charListTable);
-                    //}
+                    // if no players are found them say so, else display players
+                    if (!findCharacterByAbilityType.Any())
+                    {
+                        AnsiConsole.MarkupLine("[yellow]No characters with that experience level were found in the room.[/]");
+                    }
+                    else
+                    {
+                        // List all the characters that match the criteria
+                        var charListTable = new Table();
+                        charListTable.AddColumn("ID");
+                        charListTable.AddColumn("Name");
+                        charListTable.AddColumn("Experience");
+                        charListTable.AddColumn("Health");
+
+                        foreach (var character in findCharacterByAbilityType)
+                        {
+                            charListTable.AddRow(
+                                character.Id.ToString(),
+                                character.Name,
+                                character.Experience.ToString(),
+                                character.Health.ToString()
+                            );
+                        }
+
+                        AnsiConsole.Write(charListTable);
+                    }
+
+                    AnsiConsole.MarkupLine("[red]This attribute is not yet implemented.[/]");
                     break;
                 default:
                     AnsiConsole.MarkupLine("[red]Invalid option entered, try again[/]");
@@ -772,10 +782,6 @@ public class AdminService
             _logger.LogError(ex, "Error listing characters in room by attribute");
             AnsiConsole.MarkupLine($"[red]Error listing characters in room by attribute: {ex.Message}[/]");
         }
-
-        // TODO: Implement this method
-        AnsiConsole.MarkupLine("[red]This feature is not yet implemented.[/]");
-        AnsiConsole.MarkupLine("[yellow]TODO: Find characters in a room matching specific criteria.[/]");
 
         PressAnyKey();
     }
@@ -838,20 +844,6 @@ public class AdminService
         PressAnyKey();
     }
 
-    /// <summary>
-    /// TODO: Implement this method
-    /// Requirements:
-    /// - Prompt user for equipment/item name to search for
-    /// - Query the database to find which character has this equipment
-    /// - Use Include to load Equipment -> Weapon/Armor -> Item
-    /// - Also load the character's Room information
-    /// - Display the character's name who has the equipment
-    /// - Display the room/location where the character is located
-    /// - Handle case where equipment is not found
-    /// - Handle case where equipment exists but isn't equipped by anyone
-    /// - Use Spectre.Console for nice formatting
-    /// - Log the operation
-    /// </summary>
     public void FindEquipmentLocation()
     {
         _logger.LogInformation("User selected Find Equipment Location");
@@ -859,17 +851,84 @@ public class AdminService
 
         try
         {
+            // get all items
+            var items = _context.Items;
 
+            // list all items for user
+            var listItemstable = new Table();
+            listItemstable.AddColumn("Id");
+            listItemstable.AddColumn("Name");
+            listItemstable.AddColumn("Type");
+
+            foreach(var i in items)
+            {
+                listItemstable.AddRow(
+                    i.Id.ToString(),
+                    i.Name,
+                    i.Type
+                );
+            }
+
+            AnsiConsole.Write(listItemstable);
+
+            // ask the user to enter the name of an item
+            var itemName = AnsiConsole.Ask<string>("Enter the name of the item you wish to search for: ");
+
+            // get the item base on the name the user entered, if no item has the name inform the user and exit the method
+            var item = _context.Items.Where(i => i.Name == itemName);
+            if (!item.Any())
+            {
+                AnsiConsole.Markup("[yellow]No items by this name were found.[/]\n");
+                AnsiConsole.Markup("[yellow]Make sure the item name is spelled correctly.[/]");
+
+                PressAnyKey();
+                return;
+            }
+
+            // get the id from the item
+            var itemId = item.Select(i => i.Id).FirstOrDefault();
+
+            // search the database to find a list of players that have the item
+            var players = _context.Players.Where(p => p.Equipment.Id == itemId)
+                                          .Include(p => p.Room);
+
+            // if any players have the item display them in a table,
+            // else display a message saying no players with the item were found
+            if (!players.Any())
+            {
+                AnsiConsole.Markup("[yellow]No players with this item were found.[/]");
+            }
+            else
+            {
+                // list all items for user
+                var listPLayersWithItem = new Table();
+                listPLayersWithItem.AddColumn("Player Id");
+                listPLayersWithItem.AddColumn("Player Name");
+                listPLayersWithItem.AddColumn("Player Experience");
+                listPLayersWithItem.AddColumn("Player Health");
+                listPLayersWithItem.AddColumn("Player Location");
+                listPLayersWithItem.AddColumn("Location Description");
+
+                foreach (var player in players)
+                {
+                    listPLayersWithItem.AddRow(
+                        player.Id.ToString(),
+                        player.Name,
+                        player.Experience.ToString(),
+                        player.Health.ToString(),
+                        player.Room.Name,
+                        player.Room.Description
+                    );
+                }
+
+                AnsiConsole.Write(listPLayersWithItem);
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error finding characters with equipment");
             AnsiConsole.MarkupLine($"[red]Error finding characters with equipment: {ex.Message}[/]");
         }
-
-        // TODO: Implement this method
-        AnsiConsole.MarkupLine("[red]This feature is not yet implemented.[/]");
-        AnsiConsole.MarkupLine("[yellow]TODO: Find which character has specific equipment and where they are located.[/]");
 
         PressAnyKey();
     }
