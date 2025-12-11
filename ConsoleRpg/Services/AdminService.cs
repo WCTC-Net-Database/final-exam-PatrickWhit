@@ -726,22 +726,21 @@ public class AdminService
                     var abilityType = _context.Abilities.Where(a => a.AbilityType == type);
 
                     // search for the character using the ability type of an ability they have
-                    //var findCharacterByAbilityType = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId)
-                    //                                                  && c.Abilities == abilityType)
-                    //                           .Select(c => new
-                    //                           {
-                    //                               CharacterName = c.Name,
-                    //                               Abilities = c.Abilities
-                    //                           }
-                    //                           );
-
                     var findPlayersInRoom = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId));
-
-                    var findCharacterByAbilityType = findPlayersInRoom.Select(c => new
-                                                                                {
-                                                                                    CharacterName = c.Name,
-                                                                                    Abilities = c.Abilities
-                                                                                });
+                    // join the Player and Ability tables
+                    var findCharacterByAbilityType = findPlayersInRoom
+                        .Join(
+                            _context.Abilities,
+                            character => character.Abilities,
+                            ability => _context.Abilities,
+                            (character, ability) => new
+                            {
+                                Id = character.Id,
+                                Name = character.Name,
+                                Experience = character.Experience,
+                                Health = character.Health
+                            }
+                        );
 
                     // if no players are found them say so, else display players
                     if (!findCharacterByAbilityType.Any())
