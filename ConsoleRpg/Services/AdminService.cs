@@ -521,18 +521,6 @@ public class AdminService
 
     #region A-Level Requirements
 
-    /// <summary>
-    /// TODO: Implement this method
-    /// Requirements:
-    /// - Display list of all rooms **
-    /// - Prompt user to select a room **
-    /// - Display a menu of attributes to filter by (Health, Name, Experience, etc.) **
-    /// - Prompt user for filter criteria **
-    /// - Query the database for characters in that room matching the criteria
-    /// - Display matching characters with relevant details in a formatted table **
-    /// - Handle case where no characters match **
-    /// - Log the operation **
-    /// </summary>
     public void ListCharactersInRoomByAttribute()
     {
         _logger.LogInformation("User selected List Characters in Room by Attribute");
@@ -718,31 +706,45 @@ public class AdminService
                         AnsiConsole.Write(charListTable);
                     }
                     break;
+                // search by ability type is broken
                 case "ability type":
                     // user enters the type of ability they want to search for
                     AnsiConsole.MarkupLine($"Enter the ability type of the character you wish to search for.");
-                    var type = AnsiConsole.Ask<string>("([blue]ShoveAbility[/], [blue]MagicAbility[/], [blue]PhysAbility[/]): ");
-                    // abilities of that type are located
-                    var abilityType = _context.Abilities.Where(a => a.AbilityType == type);
+                    var abilityType = AnsiConsole.Ask<string>("([blue]ShoveAbility[/], [blue]MagicAbility[/], [blue]PhysAbility[/]): ");
+                    // get a list of abilities of the type entered by the user
+                    var abilities = _context.Abilities.Where(a => a.AbilityType == abilityType);
 
-                    // search for the character using the ability type of an ability they have
-                    var findPlayersInRoom = _context.Players.Where(c => c.RoomId == Convert.ToInt32(roomId));
-                    // join the Player and Ability tables
-                    var findCharacterByAbilityType = findPlayersInRoom
-                        .Join(
-                            _context.Abilities,
-                            character => character.Abilities,
-                            ability => _context.Abilities,
-                            (character, ability) => new
-                            {
-                                Id = character.Id,
-                                Name = character.Name,
-                                Experience = character.Experience,
-                                Health = character.Health
-                            }
-                        );
+                    // if entered ability type has no matches, then state that to the user
+                    if (!abilities.Any())
+                    {
+                        AnsiConsole.MarkupLine("[yellow]No abilities of that type were found.[/]");
+                        AnsiConsole.MarkupLine("[yellow]Make sure your spelling is correct.[/]");
 
-                    // if no players are found them say so, else display players
+                        PressAnyKey();
+                        return;
+                    }
+
+                    // get the Ids from the abilities
+                    //var abilitiIds = abilities.Select(a => a.Id).ToList();
+                    // get a list of all the players in the specified room
+                    var findPlayersInRoom = _context.Players
+                        .Where(c => c.RoomId == Convert.ToInt32(roomId))
+                        .Include(c => c.Abilities)
+                        .ToList();
+
+                    // loop over the abilities with the entered type and find the players in the room
+                    // that have them and add them to a list
+                    List<Player> findCharacterByAbilityType = new List<Player>();
+                    foreach (var player in findPlayersInRoom)
+                    {
+                        foreach(var ability in abilities)
+                        {
+                            if (player.Abilities.Contains(ability))
+                                findCharacterByAbilityType.Add(player);
+                        }
+                    }
+
+                    // display the list of players found through the search, if no players are found then say so
                     if (!findCharacterByAbilityType.Any())
                     {
                         AnsiConsole.MarkupLine("[yellow]No characters with that experience level were found in the room.[/]");
@@ -768,8 +770,6 @@ public class AdminService
 
                         AnsiConsole.Write(charListTable);
                     }
-
-                    AnsiConsole.MarkupLine("[red]This attribute is not yet implemented.[/]");
                     break;
                 default:
                     AnsiConsole.MarkupLine("[red]Invalid option entered, try again[/]");
@@ -888,8 +888,9 @@ public class AdminService
             var itemId = item.Select(i => i.Id).FirstOrDefault();
 
             // search the database to find a list of players that have the item
-            var players = _context.Players.Where(p => p.Equipment.Id == itemId)
-                                          .Include(p => p.Room);
+            var players = _context.Players
+                .Where(p => p.Equipment.Id == itemId)
+                .Include(p => p.Room);
 
             // if any players have the item display them in a table,
             // else display a message saying no players with the item were found
