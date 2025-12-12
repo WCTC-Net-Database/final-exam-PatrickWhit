@@ -706,7 +706,6 @@ public class AdminService
                         AnsiConsole.Write(charListTable);
                     }
                     break;
-                // search by ability type is broken
                 case "ability type":
                     // user enters the type of ability they want to search for
                     AnsiConsole.MarkupLine($"Enter the ability type of the character you wish to search for.");

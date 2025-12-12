@@ -1,8 +1,9 @@
 ﻿using ConsoleRpgEntities.Models.Abilities.PlayerAbilities;
 using ConsoleRpgEntities.Models.Attributes;
-using System.ComponentModel.DataAnnotations;
 using ConsoleRpgEntities.Models.Equipments;
 using ConsoleRpgEntities.Models.Rooms;
+using Microsoft.Extensions.CommandLineUtils;
+using System.ComponentModel.DataAnnotations;
 
 namespace ConsoleRpgEntities.Models.Characters
 {
@@ -34,12 +35,20 @@ namespace ConsoleRpgEntities.Models.Characters
             {
                 Console.WriteLine($"{Name} attacks {target.Name} with their fist dealing 1 damage!");
                 target.Health -= 1;
+                Console.WriteLine($"{target.Name} has {target.Health} health remaining.");
+                Console.WriteLine("Press Enter to Continue...");
+                // this line is designed to stop the output and reset the menu
+                var garabge = Console.ReadLine();
                 return ($"{target.Name} has {target.Health} health remaining.");
             }
             else
             {
                 Console.WriteLine($"{Name} attacks {target.Name} with a {Equipment.Weapon.Name} dealing {Equipment.Weapon.Attack} damage!");
                 target.Health -= Equipment.Weapon.Attack;
+                Console.WriteLine($"{target.Name} has {target.Health} health remaining.");
+                Console.WriteLine("Press Enter to Continue...");
+                // this line is designed to stop the output and reset the menu
+                var garabge = Console.ReadLine();
                 return ($"{target.Name} has {target.Health} health remaining.");
             }
         }
